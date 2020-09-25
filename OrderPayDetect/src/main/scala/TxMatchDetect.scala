@@ -1,3 +1,5 @@
+import java.net.URL
+
 import org.apache.flink.api.common.state.{ValueState, ValueStateDescriptor}
 import org.apache.flink.streaming.api.TimeCharacteristic
 import org.apache.flink.streaming.api.functions.co.CoProcessFunction
@@ -19,7 +21,7 @@ object TxMatchDetect {
     env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
 
     //读取订单事件流
-    val resource = getClass.getResource("/OrderLog.csv")
+    val resource: URL = getClass.getResource("/OrderLog.csv")
     val orderEventStream = env.readTextFile(resource.getPath)
       .map(data => {
         val dataArray = data.split(",")
