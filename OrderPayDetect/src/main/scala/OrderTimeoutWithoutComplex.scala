@@ -8,8 +8,7 @@ import org.apache.flink.util.Collector
 
 object OrderTimeoutWithoutComplex {
 
-
-  val orderTimeoutOutputTag = new OutputTag[OrderResult]("orderTimeout")
+  val orderTimeoutOutputTag: OutputTag[OrderResult] = new OutputTag[OrderResult]("orderTimeout")
 
   def main(args: Array[String]): Unit = {
 
@@ -21,7 +20,7 @@ object OrderTimeoutWithoutComplex {
     val resource: URL = getClass.getResource("/OrderLog.csv")
     //    val orderEventStream = env.readTextFile(resource.getPath)
     val orderEventStream: KeyedStream[OrderEvent, Long] = env.socketTextStream("localhost", 7777)
-      .map(data => {
+      .map((data: String) => {
         val dataArray: Array[String] = data.split(",")
         OrderEvent(dataArray(0).trim.toLong, dataArray(1).trim, dataArray(2).trim, dataArray(3).trim.toLong)
       })
