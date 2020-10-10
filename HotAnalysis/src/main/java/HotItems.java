@@ -17,7 +17,6 @@ import org.apache.flink.util.Collector;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -30,7 +29,7 @@ import java.util.List;
 public class HotItems {
 
     public static void main(String[] args) throws Exception {
-        String path = HotItems.class.getClass().getResource("/UserBehavior.csv").getPath();
+        String path = HotItems.class.getResource("/UserBehavior.csv").getPath();
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
         env.setParallelism(1);
@@ -55,6 +54,8 @@ public class HotItems {
             }
         })
                 .timeWindow(Time.minutes(60), Time.minutes(5))
+                //允许迟到数据1分钟，在watermark的1分钟内，时间窗口不会关闭，依然会等迟到数据。只有等watermark更新之后，窗口才会触发计算操作
+                .allowedLateness(Time.minutes(1))
                 .aggregate(new AggreCount(), new Window())
                 .keyBy(new KeySelector<ItemViewCount, Long>() {
                     @Override
@@ -118,9 +119,8 @@ public class HotItems {
         @Override
         public void onTimer(long timestamp, OnTimerContext ctx, Collector<String> out) throws Exception {
             List<ItemViewCount> res = new ArrayList<>();
-            Iterator<ItemViewCount> iterator = listState.get().iterator();
-            while (iterator.hasNext()) {
-                res.add(iterator.next());
+            for (ItemViewCount viewCount : listState.get()) {
+                res.add(viewCount);
             }
             //按照count的逆序进行排序
             res.sort((o1, o2) -> (int) (o2.getCount() - o1.getCount()));
